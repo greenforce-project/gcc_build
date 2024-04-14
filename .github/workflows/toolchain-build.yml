@@ -19,6 +19,15 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+    - name: Setup git config and hooks
+      run: |
+        git config --global user.name "$GITHUB_USER"
+        git config --global user.email "$GITHUB_EMAIL"
+        mkdir -p ~/.git/hooks
+        git config --global core.hooksPath ~/.git/hooks
+        curl -Lo ~/.git/hooks/commit-msg https://review.lineageos.org/tools/hooks/commit-msg
+        chmod u+x ~/.git/hooks/commit-msg
+
     - name: Build
       run: |
         git clone https://${GITHUB_TOKEN}@github.com/greenforce-project/gcc-arm64 -b main --depth=1
@@ -47,6 +56,15 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+    - name: Setup git config and hooks
+      run: |
+        git config --global user.name "$GITHUB_USER"
+        git config --global user.email "$GITHUB_EMAIL"
+        mkdir -p ~/.git/hooks
+        git config --global core.hooksPath ~/.git/hooks
+        curl -Lo ~/.git/hooks/commit-msg https://review.lineageos.org/tools/hooks/commit-msg
+        chmod u+x ~/.git/hooks/commit-msg
+
     - name: Build
       run: |
         git clone https://${GITHUB_TOKEN}@github.com/greenforce-project/gcc-arm -b main --depth=1
