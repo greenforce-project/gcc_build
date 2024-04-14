@@ -1,4 +1,4 @@
-name: GCC+LLD Build
+name: GCC Build
 
 on:
   workflow_dispatch:
@@ -23,13 +23,12 @@ jobs:
       run: |
         chmod a+x build-*.sh
         ./build-gcc.sh -a arm64
-        ./build-lld.sh -a arm64
         script_dir=$(pwd)
         cd gcc-arm64
         ./bin/aarch64-elf-gcc -v 2>&1 | tee ../gcc-version
-        ./bin/aarch64-elf-ld.lld -v 2>&1 | tee ../lld-arm64-version
+        ./bin/aarch64-elf-ld -v 2>&1 | tee ../ld-version
         bash "$script_dir/strip-binaries.sh"
-        cd ../ && cat lld-arm64-version >> gcc-version
+        cd ../ && cat ld-version >> gcc-version
     - name: Create tarball
       run: |
         tar -cvf gf-gcc-arm64-$(/bin/date -u '+%d%m%Y').xz gcc-arm64/*
@@ -52,7 +51,6 @@ jobs:
       run: |
         chmod a+x build-*.sh
         ./build-gcc.sh -a arm
-        ./build-lld.sh -a arm
         script_dir=$(pwd)
         bash "$script_dir/strip-binaries.sh"
     - name: Create tarball
