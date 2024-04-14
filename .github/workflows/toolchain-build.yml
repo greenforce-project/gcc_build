@@ -24,6 +24,7 @@ jobs:
         fetch-depth: 0
     - name: Push an empty commit
       run: |
+          git config --global --add safe.directory /__w/gcc_build/gcc_build
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git commit --allow-empty -m "github-actions: $(date +'%d%m%Y')"
