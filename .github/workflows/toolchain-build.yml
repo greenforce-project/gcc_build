@@ -11,6 +11,7 @@ env:
       GITHUB_EMAIL: ${{ secrets.EMAIL }}
       GITHUB_TOKEN: ${{ secrets.API_TOKEN_GITHUB }}
       GITHUB_USER: ${{ secrets.USERNAME }}
+      GITHUB_REPO: ${{ secrets.REPO_SECRET }}
 
 jobs:
   push-dump-commit:
@@ -28,7 +29,7 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git commit --allow-empty -m "github-actions: $(date +'%d%m%Y')"
-          git push https://${GITHUB_TOKEN}@github.com/greenforce-project/gcc_build main -f
+          git push "$GITHUB_REPO" main -f
 
   build-arm64-tc:
     needs: push-dump-commit
