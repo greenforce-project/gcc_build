@@ -32,7 +32,7 @@ export PATH="$PREFIX/bin:/usr/bin/core_perl:$PATH"
 export OPT_FLAGS="-flto -flto-compression-level=10 -O3 -pipe -ffunction-sections -fdata-sections"
 
 echo "Cleaning up previously cloned repos..."
-rm -rf "$WORK_DIR"/{binutils,build-binutils,build-gcc,gcc}
+rm -rf "$WORK_DIR"/{binutils,build-binutils,build-gcc,gcc} "$PREFIX"/*
 
 echo "||                                                                    ||"
 echo "|| Building Bare Metal Toolchain for ${arch} with ${TARGET} as target ||"
@@ -77,6 +77,8 @@ build_gcc() {
   ./contrib/download_prerequisites
   trim_ver="$(cat gcc/BASE-VER | cut -c 1-2)"
   echo "Gf Cross v${trim_ver}" > gcc/DEV-PHASE
+  echo "$(git rev-parse --short HEAD)" > /tmp/gcc_hash
+  echo "$(git log --pretty='format:%s' | head -n1)" > /tmp/gcc_commit
   cd ../
   mkdir build-gcc
   cd build-gcc

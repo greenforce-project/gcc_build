@@ -21,6 +21,7 @@ jobs:
     - uses: actions/checkout@v4
     - name: Build
       run: |
+        git clone https://${GITHUB_TOKEN}@github.com/greenforce-project/gcc-arm64 -b main --depth=1
         chmod a+x build-*.sh
         ./build-gcc.sh -a arm64
         script_dir=$(pwd)
@@ -28,17 +29,16 @@ jobs:
         ./bin/aarch64-elf-gcc -v 2>&1 | tee ../gcc-version
         ./bin/aarch64-elf-ld -v 2>&1 | tee ../ld-version
         bash "$script_dir/strip-binaries.sh"
-        cd ../ && cat ld-version >> gcc-version
-    - name: Create tarball
-      run: |
-        tar -cvf gf-gcc-arm64-$(/bin/date -u '+%d%m%Y').xz gcc-arm64/*
-
-    - uses: actions/upload-artifact@main
-      with:
-       name: aarch64-tarball
-       path: |
-         *.xz
-         gcc-version
+        git add . -f
+        touch ../git_commit
+        {
+            echo "GCC version: $(cat ../gcc-version | grep 'gcc version')"
+            echo "Binutils version: $(cat ../ld-version | head -n1)"
+            echo "GCC repo commit: $(cat /tmp/gcc_commit)"
+            echo "Link: https://github.com/gcc-mirror/gcc/commit/$(cat /tmp/gcc_hash)"
+        } > ../git_commit
+        git commit -m "greenforce: Bump to $(date +'%d%m%Y') build" -m "$(cat ../git_commit)" -s
+        git push -f
 
   build-arm-tc:
     runs-on: ubuntu-latest
@@ -49,33 +49,21 @@ jobs:
     - uses: actions/checkout@v4
     - name: Build
       run: |
+        git clone https://${GITHUB_TOKEN}@github.com/greenforce-project/gcc-arm -b main --depth=1
         chmod a+x build-*.sh
         ./build-gcc.sh -a arm
         script_dir=$(pwd)
+        cd gcc-arm
+        ./bin/arm-eabi-gcc -v 2>&1 | tee ../gcc-version
+        ./bin/arm-eabi-ld -v 2>&1 | tee ../ld-version
         bash "$script_dir/strip-binaries.sh"
-    - name: Create tarball
-      run: |
-        tar -cvf gf-gcc-arm-$(/bin/date -u '+%d%m%Y').xz gcc-arm/*
-
-    - uses: actions/upload-artifact@main
-      with:
-       name: arm-tarball
-       path: |
-         *.xz
-
-  publish-release:
-      needs: [build-arm64-tc,build-arm-tc]
-      runs-on: ubuntu-latest
-
-      steps:
-        - uses: actions/checkout@v4
-        - name: Restoring artifacts
-          uses: actions/download-artifact@main
-          with:
-            path: ${{ github.workspace }}
-        - name: Release Tag
-          id: release_tag
-          run: echo "TAG_NAME='$(date -u +%d%m%Y)'" >> $GITHUB_ENV
-        - name: Create Release
-          run: |
-            gh release create ${{ env.TAG_NAME }} -F aarch64-tarball/gcc-version */*.xz
+        git add . -f
+        touch ../git_commit
+        {
+            echo "GCC version: $(cat ../gcc-version | grep 'gcc version')"
+            echo "Binutils version: $(cat ../ld-version | head -n1)"
+            echo "GCC repo commit: $(cat /tmp/gcc_commit)"
+            echo "Link: https://github.com/gcc-mirror/gcc/commit/$(cat /tmp/gcc_hash)"
+        } > ../git_commit
+        git commit -m "greenforce: Bump to $(date +'%d%m%Y') build" -m "$(cat ../git_commit)" -s
+        git push -f
