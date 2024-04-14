@@ -7,6 +7,7 @@ on:
     - cron: '0 00 * * SAT'
 
 env:
+      TZ: Asia/Jakarta
       GITHUB_EMAIL: ${{ secrets.EMAIL }}
       GITHUB_TOKEN: ${{ secrets.API_TOKEN_GITHUB }}
       GITHUB_USER: ${{ secrets.USERNAME }}
