@@ -30,13 +30,13 @@ jobs:
 
     - name: Build
       run: |
-        git clone https://${GITHUB_TOKEN}@github.com/greenforce-project/gcc-arm64 -b main --depth=1
+        git clone https://${GITHUB_TOKEN}@github.com/greenforce-project/gcc-arm64 -b main gcc-arm64gnu --depth=1
         chmod a+x build-*.sh
-        ./build-gcc.sh -a arm64
+        ./build-gcc.sh -a arm64gnu
         script_dir=$(pwd)
-        cd gcc-arm64
-        ./bin/aarch64-elf-gcc -v 2>&1 | tee ../gcc-version
-        ./bin/aarch64-elf-ld -v 2>&1 | tee ../ld-version
+        cd gcc-arm64gnu
+        ./bin/aarch64-linux-gnu-gcc -v 2>&1 | tee ../gcc-version
+        ./bin/aarch64-linux-gnu-ld -v 2>&1 | tee ../ld-version
         bash "$script_dir/strip-binaries.sh"
         git add . -f
         touch ../git_commit
@@ -67,13 +67,13 @@ jobs:
 
     - name: Build
       run: |
-        git clone https://${GITHUB_TOKEN}@github.com/greenforce-project/gcc-arm -b main --depth=1
+        git clone https://${GITHUB_TOKEN}@github.com/greenforce-project/gcc-arm -b main gcc-armgnu --depth=1
         chmod a+x build-*.sh
-        ./build-gcc.sh -a arm
+        ./build-gcc.sh -a armgnu
         script_dir=$(pwd)
-        cd gcc-arm
-        ./bin/arm-eabi-gcc -v 2>&1 | tee ../gcc-version
-        ./bin/arm-eabi-ld -v 2>&1 | tee ../ld-version
+        cd gcc-armgnu
+        ./bin/arm-linux-gnueabi-gcc -v 2>&1 | tee ../gcc-version
+        ./bin/arm-linux-gnueabi-ld -v 2>&1 | tee ../ld-version
         bash "$script_dir/strip-binaries.sh"
         git add . -f
         touch ../git_commit
