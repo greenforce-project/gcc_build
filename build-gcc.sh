@@ -63,7 +63,6 @@ build_binutils() {
     --disable-werror \
     --enable-gold \
     --prefix="$PREFIX" \
-    --with-pkgversion="Eva Binutils" \
     --with-sysroot
   make -j"$JOBS"
   make install -j"$JOBS"
@@ -76,7 +75,8 @@ build_gcc() {
   echo "Building GCC"
   cd gcc
   ./contrib/download_prerequisites
-  echo "Bleeding Edge" > gcc/DEV-PHASE
+  trim_ver="$(cat gcc/BASE-VER | cut -c 1-2)"
+  echo "Gf Cross v${trim_ver}" > gcc/DEV-PHASE
   cd ../
   mkdir build-gcc
   cd build-gcc
@@ -101,7 +101,6 @@ build_gcc() {
     --with-headers="/usr/include" \
     --with-linker-hash-style=gnu \
     --with-newlib \
-    --with-pkgversion="Eva GCC" \
     --with-sysroot
 
   make all-gcc -j"$JOBS"

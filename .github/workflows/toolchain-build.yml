@@ -35,7 +35,7 @@ jobs:
         cd ../ && cat lld-arm64-version >> gcc-version
     - name: Create tarball
       run: |
-        tar -cvf eva-gcc-arm64-$(/bin/date -u '+%d%m%Y').xz gcc-arm64/*
+        tar -cvf gf-gcc-arm64-$(/bin/date -u '+%d%m%Y').xz gcc-arm64/*
 
     - uses: actions/upload-artifact@main
       with:
@@ -61,7 +61,7 @@ jobs:
         bash "$script_dir/strip-binaries.sh"
     - name: Create tarball
       run: |
-        tar -cvf eva-gcc-arm-$(/bin/date -u '+%d%m%Y').xz gcc-arm/*
+        tar -cvf gf-gcc-arm-$(/bin/date -u '+%d%m%Y').xz gcc-arm/*
 
     - uses: actions/upload-artifact@main
       with:
