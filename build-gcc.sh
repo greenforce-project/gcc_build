@@ -43,22 +43,20 @@ echo "||                                                                    ||"
 download_resources() {
   echo "Downloading Pre-requisites"
   echo "Cloning binutils"
-  git clone git://sourceware.org/git/binutils-gdb.git -b master binutils --depth=1
-  sed -i '/^development=/s/true/false/' binutils/bfd/development.sh
+  git clone git://sourceware.org/git/binutils-gdb.git -b master "$WORK_DIR"/binutils --depth=1
+  sed -i '/^development=/s/true/false/' "$WORK_DIR"/binutils/bfd/development.sh
   echo "Cloned binutils!"
   echo "Cloning GCC"
-  git clone git://gcc.gnu.org/git/gcc.git -b master gcc --depth=1
-  cd "${WORK_DIR}"
+  git clone git://gcc.gnu.org/git/gcc.git -b master "$WORK_DIR"/gcc --depth=1
   echo "Downloaded prerequisites!"
 }
 
 build_binutils() {
-  cd "${WORK_DIR}"
   echo "Building Binutils"
-  mkdir build-binutils
-  cd build-binutils
+  mkdir -p "$WORK_DIR"/build-binutils
+  pushd "$WORK_DIR"/build-binutils || exit 1
   env CFLAGS="$OPT_FLAGS" CXXFLAGS="$OPT_FLAGS" \
-    ../binutils/configure --target="$TARGET" \
+    "$WORK_DIR"/binutils/configure --target="$TARGET" \
     --disable-docs \
     --disable-gdb \
     --disable-nls \
@@ -68,24 +66,23 @@ build_binutils() {
     --with-sysroot
   make -j"$JOBS"
   make install -j"$JOBS"
-  cd ../
+  popd || exit 1
   echo "Built Binutils, proceeding to next step...."
 }
 
 build_gcc() {
-  cd "${WORK_DIR}"
   echo "Building GCC"
-  cd gcc
+  pushd "$WORK_DIR"/gcc || exit 1
   ./contrib/download_prerequisites
   trim_ver="$(cat gcc/BASE-VER | cut -c 1-2)"
   echo "Gf Cross v${trim_ver}" > gcc/DEV-PHASE
   echo "$(git rev-parse --short HEAD)" > /tmp/gcc_hash
   echo "$(git log --pretty='format:%s' | head -n1)" > /tmp/gcc_commit
-  cd ../
-  mkdir build-gcc
-  cd build-gcc
+  popd || exit 1
+  mkdir -p "$WORK_DIR"/build-gcc
+  pushd "$WORK_DIR"/build-gcc || exit 1
   env CFLAGS="$OPT_FLAGS" CXXFLAGS="$OPT_FLAGS" \
-    ../gcc/configure --target="$TARGET" \
+    "$WORK_DIR"/gcc/configure --target="$TARGET" \
     --disable-decimal-float \
     --disable-docs \
     --disable-gcov \
@@ -111,6 +108,7 @@ build_gcc() {
   make all-target-libgcc -j"$JOBS"
   make install-gcc -j"$JOBS"
   make install-target-libgcc -j"$JOBS"
+  popd || exit 1
   echo "Built GCC!"
 }
 
