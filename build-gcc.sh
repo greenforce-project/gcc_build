@@ -63,6 +63,7 @@ build_binutils() {
     --disable-werror \
     --enable-gold \
     --prefix="$PREFIX" \
+    --with-pkgversion="Gf Cross Binutils" \
     --with-sysroot
   make -j"$JOBS"
   make install -j"$JOBS"
