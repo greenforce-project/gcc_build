@@ -72,7 +72,7 @@ jobs:
         git push -f
         gcc_version="$(cat ../gcc-version | grep 'gcc version' | awk '{for(i=1;i<=NF;i++) if ($i ~ /[0-9]+\.[0-9]+\.[0-9]+/) print $i}')"
         release_file="greenforce-GCC-${gcc_version}-arm64gnu-${build_tag}.tar.zst"
-        tar -I 'zstd --ultra -19 -T0' -cf "${release_file}" ./*
+        tar -I 'zstd --ultra -5 -T0' -cf "${release_file}" ./*
         if gh release view "${build_tag}"; then
             gh release upload --clobber "${build_tag}" "${release_file}" &&
                 {
@@ -126,7 +126,7 @@ jobs:
         git push -f
         gcc_version="$(cat ../gcc-version | grep 'gcc version' | awk '{for(i=1;i<=NF;i++) if ($i ~ /[0-9]+\.[0-9]+\.[0-9]+/) print $i}')"
         release_file="greenforce-GCC-${gcc_version}-armgnu-${build_tag}.tar.zst"
-        tar -I 'zstd --ultra -19 -T0' -cf "${release_file}" ./*
+        tar -I 'zstd --ultra -5 -T0' -cf "${release_file}" ./*
         if gh release view "${build_tag}"; then
             gh release upload --clobber "${build_tag}" "${release_file}" &&
                 {
