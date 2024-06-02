@@ -76,6 +76,7 @@ build_gcc() {
   ./contrib/download_prerequisites
   trim_ver="$(cat gcc/BASE-VER | cut -c 1-2)"
   echo "Gf Cross v${trim_ver}" > gcc/DEV-PHASE
+  cat gcc/DATESTAMP > /tmp/gcc_date
   echo "$(git rev-parse --short HEAD)" > /tmp/gcc_hash
   echo "$(git log --pretty='format:%s' | head -n1)" > /tmp/gcc_commit
   popd || exit 1

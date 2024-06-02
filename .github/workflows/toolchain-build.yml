@@ -58,7 +58,7 @@ jobs:
         ./bin/aarch64-linux-gnu-gcc -v 2>&1 | tee ../gcc-version
         ./bin/aarch64-linux-gnu-ld -v 2>&1 | tee ../ld-version
         bash "$script_dir/strip-binaries.sh"
-        build_tag="$(date +'%d%m%Y')"
+        build_tag="$(cat /tmp/gcc_date)"
         build_date="$(date +'%-d %B %Y')"
         git add . -f
         touch ../git_commit
@@ -112,7 +112,7 @@ jobs:
         ./bin/arm-linux-gnueabi-gcc -v 2>&1 | tee ../gcc-version
         ./bin/arm-linux-gnueabi-ld -v 2>&1 | tee ../ld-version
         bash "$script_dir/strip-binaries.sh"
-        build_tag="$(date +'%d%m%Y')"
+        build_tag="$(cat /tmp/gcc_date)"
         build_date="$(date +'%-d %B %Y')"
         git add . -f
         touch ../git_commit
