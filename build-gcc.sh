@@ -55,7 +55,7 @@ build_binutils() {
   mkdir -p "$WORK_DIR"/build-binutils
   pushd "$WORK_DIR"/build-binutils || exit 1
   env CFLAGS="$OPT_FLAGS" CXXFLAGS="$OPT_FLAGS" \
-    "$WORK_DIR"/binutils/configure --target="$TARGET" \
+  "$WORK_DIR"/binutils/configure --target="$TARGET" \
     --disable-docs \
     --disable-gdb \
     --disable-nls \
@@ -83,7 +83,7 @@ build_gcc() {
   mkdir -p "$WORK_DIR"/build-gcc
   pushd "$WORK_DIR"/build-gcc || exit 1
   env CFLAGS="$OPT_FLAGS" CXXFLAGS="$OPT_FLAGS" \
-    "$WORK_DIR"/gcc/configure --target="$TARGET" \
+  "$WORK_DIR"/gcc/configure --target="$TARGET" \
     --disable-decimal-float \
     --disable-docs \
     --disable-gcov \
@@ -104,7 +104,6 @@ build_gcc() {
     --with-linker-hash-style=gnu \
     --with-newlib \
     --with-sysroot
-
   make all-gcc -j"$JOBS"
   make all-target-libgcc -j"$JOBS"
   make install-gcc -j"$JOBS"
