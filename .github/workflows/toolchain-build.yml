@@ -1,111 +1,140 @@
-name: GCC+LLD Build
+name: GCC Build
 
 on:
-  push:
+  workflow_dispatch:
     branches: [ main ]
   schedule:
-    - cron: '0 0 * * 0,4'
+    - cron: '0 00 * * SAT'
 
 env:
+      TZ: Asia/Jakarta
       GITHUB_EMAIL: ${{ secrets.EMAIL }}
       GITHUB_TOKEN: ${{ secrets.API_TOKEN_GITHUB }}
       GITHUB_USER: ${{ secrets.USERNAME }}
-      BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-      CHAT_ID: ${{ secrets.CHAT }}
+      GITHUB_REPO: ${{ secrets.REPO_SECRET }}
 
 jobs:
-  build-arm64-tc:
+  push-dump-commit:
     runs-on: ubuntu-latest
+    container:
+      image: mhmmdfdlyas/dockerfile:t-ubuntu
 
     steps:
     - uses: actions/checkout@v6
-    - name: Set build date
-      id: get-date
+      with:
+        fetch-depth: 0
+    - name: Push an empty commit
       run: |
-        sudo ln -sf /usr/share/zoneinfo/Asia/Kolkata /etc/localtime
-        echo ::set-output name=date::$(/bin/date -u "+%Y%m%d")
-    - name: Setup
+          git config --global --add safe.directory /__w/gcc_build/gcc_build
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git commit --allow-empty -m "github-actions: $(date +'%d%m%Y')"
+          git push "$GITHUB_REPO" main -f
+
+  build-arm64-tc:
+    needs: push-dump-commit
+    runs-on: ubuntu-latest
+    container:
+      image: mhmmdfdlyas/dockerfile:t-ubuntu
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup git config and hooks
       run: |
-        sudo apt-get update
-        sudo apt-get install -y flex bison ncurses-dev texinfo gcc gperf patch libtool automake g++ libncurses5-dev gawk subversion expat libexpat1-dev binutils-dev bc libcap-dev autoconf libgmp-dev build-essential pkg-config libmpc-dev libmpfr-dev autopoint gettext txt2man liblzma-dev libssl-dev libz-dev mercurial wget tar cmake zstd ninja-build lz4 liblz4-tool liblz4-dev lzma libc6-dev-i386 --fix-broken --fix-missing
+        git config --global user.name "$GITHUB_USER"
+        git config --global user.email "$GITHUB_EMAIL"
+        mkdir -p ~/.git/hooks
+        git config --global core.hooksPath ~/.git/hooks
+        curl -Lo ~/.git/hooks/commit-msg https://review.lineageos.org/tools/hooks/commit-msg
+        chmod u+x ~/.git/hooks/commit-msg
+
     - name: Build
       run: |
+        git clone https://${GITHUB_TOKEN}@github.com/greenforce-project/gcc-arm64 -b main gcc-arm64gnu --depth=1
         chmod a+x build-*.sh
-        curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" -d chat_id="${CHAT_ID}" -d "disable_web_page_preview=true" -d "parse_mode=html" -d text="<b>Starting ARM64 GCC Build</b>"
-        ./build-gcc.sh -a arm64
-        ./build-lld.sh -a arm64
+        ./build-gcc.sh -a arm64gnu
         script_dir=$(pwd)
-        cd gcc-arm64
-        ./bin/aarch64-elf-gcc -v 2>&1 | tee ../gcc-version
-        ./bin/aarch64-elf-ld.lld -v 2>&1 | tee ../lld-arm64-version
+        cd gcc-arm64gnu
+        ./bin/aarch64-linux-gnu-gcc -v 2>&1 | tee ../gcc-version
+        ./bin/aarch64-linux-gnu-ld -v 2>&1 | tee ../ld-version
         bash "$script_dir/strip-binaries.sh"
-        cd ../ && cat lld-arm64-version >> gcc-version
-    - name: Create tarball
-      run: |
-        tar -cvf eva-gcc-arm64-$(/bin/date -u '+%d%m%Y').xz gcc-arm64/*
-
-    - uses: actions/upload-artifact@main
-      with:
-       name: aarch64-tarball
-       path: |
-         *.xz
-         gcc-version
+        build_tag="$(cat /tmp/gcc_date)"
+        build_date="$(date +'%-d %B %Y')"
+        git add . -f
+        touch ../git_commit
+        {
+            echo "GCC version: $(cat ../gcc-version | grep 'gcc version')"
+            echo "Binutils version: $(cat ../ld-version | head -n1)"
+            echo "GCC repo commit: $(cat /tmp/gcc_commit)"
+            echo "Link: https://github.com/gcc-mirror/gcc/commit/$(cat /tmp/gcc_hash)"
+        } > ../git_commit
+        git commit -m "greenforce: Bump to ${build_tag} build" -m "$(cat ../git_commit)" -s
+        git push -f
+        gcc_version="$(cat ../gcc-version | grep 'gcc version' | awk '{for(i=1;i<=NF;i++) if ($i ~ /[0-9]+\.[0-9]+\.[0-9]+/) print $i}')"
+        release_file="greenforce-GCC-${gcc_version}-arm64gnu-${build_tag}.tar.zst"
+        tar -I 'zstd --ultra -5 -T0' -cf "${release_file}" ./*
+        if gh release view "${build_tag}"; then
+            gh release upload --clobber "${build_tag}" "${release_file}" &&
+                {
+                    echo "Version ${build_tag} updated!"
+                }
+        else
+            gh release create "${build_tag}" "${release_file}" -t "${build_date}" &&
+                {
+                    echo "Version ${build_tag} released!"
+                }
+        fi
 
   build-arm-tc:
+    needs: push-dump-commit
     runs-on: ubuntu-latest
+    container:
+      image: mhmmdfdlyas/dockerfile:t-ubuntu
 
     steps:
     - uses: actions/checkout@v6
-    - name: Set build date
-      id: get-date
+    - name: Setup git config and hooks
       run: |
-        sudo ln -sf /usr/share/zoneinfo/Asia/Kolkata /etc/localtime
-        echo ::set-output name=date::$(/bin/date -u "+%Y%m%d")
-    - name: Setup
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y flex bison ncurses-dev texinfo gcc gperf patch libtool automake g++ libncurses5-dev gawk subversion expat libexpat1-dev binutils-dev bc libcap-dev autoconf libgmp-dev build-essential pkg-config libmpc-dev libmpfr-dev autopoint gettext txt2man liblzma-dev libssl-dev libz-dev mercurial wget tar cmake zstd ninja-build lz4 liblz4-tool liblz4-dev lzma libc6-dev-i386 --fix-broken --fix-missing
+        git config --global user.name "$GITHUB_USER"
+        git config --global user.email "$GITHUB_EMAIL"
+        mkdir -p ~/.git/hooks
+        git config --global core.hooksPath ~/.git/hooks
+        curl -Lo ~/.git/hooks/commit-msg https://review.lineageos.org/tools/hooks/commit-msg
+        chmod u+x ~/.git/hooks/commit-msg
+
     - name: Build
       run: |
+        git clone https://${GITHUB_TOKEN}@github.com/greenforce-project/gcc-arm -b main gcc-armgnu --depth=1
         chmod a+x build-*.sh
-        curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" -d chat_id="${CHAT_ID}" -d "disable_web_page_preview=true" -d "parse_mode=html" -d text="<b>Starting ARM (32-bit) GCC Build</b>"
-        ./build-gcc.sh -a arm
-        ./build-lld.sh -a arm
+        ./build-gcc.sh -a armgnu
         script_dir=$(pwd)
+        cd gcc-armgnu
+        ./bin/arm-linux-gnueabi-gcc -v 2>&1 | tee ../gcc-version
+        ./bin/arm-linux-gnueabi-ld -v 2>&1 | tee ../ld-version
         bash "$script_dir/strip-binaries.sh"
-    - name: Create tarball
-      run: |
-        tar -cvf eva-gcc-arm-$(/bin/date -u '+%d%m%Y').xz gcc-arm/*
-
-    - uses: actions/upload-artifact@main
-      with:
-       name: arm-tarball
-       path: |
-         *.xz
-
-  publish-release:
-      needs: [build-arm64-tc,build-arm-tc]
-      runs-on: ubuntu-latest
-
-      steps:
-        - uses: actions/checkout@v6
-        - name: Restoring artifacts
-          uses: actions/download-artifact@main
-          with:
-            path: ${{ github.workspace }}
-        - name: Release Tag
-          id: release_tag
-          run: echo "TAG_NAME='$(date -u +%d%m%Y)'" >> $GITHUB_ENV
-        - name: Create Release
-          run: |
-            gh release create ${{ env.TAG_NAME }} -F aarch64-tarball/gcc-version */*.xz
-
-  send-day:
-    needs: [publish-release]
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Send telegram messages
-        run: |
-          curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" -d chat_id="${CHAT_ID}" -d "disable_web_page_preview=true" -d "parse_mode=html" -d text="It's $(date +%A) my dudes!"
-          curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" -d chat_id="${CHAT_ID}" -d "disable_web_page_preview=true" -d "parse_mode=html" -d text="The year is $(date +'%j' | awk '{printf "%.2f\n", $0 / 365 * 100}')% complete. Time is flying."
+        build_tag="$(cat /tmp/gcc_date)"
+        build_date="$(date +'%-d %B %Y')"
+        git add . -f
+        touch ../git_commit
+        {
+            echo "GCC version: $(cat ../gcc-version | grep 'gcc version')"
+            echo "Binutils version: $(cat ../ld-version | head -n1)"
+            echo "GCC repo commit: $(cat /tmp/gcc_commit)"
+            echo "Link: https://github.com/gcc-mirror/gcc/commit/$(cat /tmp/gcc_hash)"
+        } > ../git_commit
+        git commit -m "greenforce: Bump to ${build_tag} build" -m "$(cat ../git_commit)" -s
+        git push -f
+        gcc_version="$(cat ../gcc-version | grep 'gcc version' | awk '{for(i=1;i<=NF;i++) if ($i ~ /[0-9]+\.[0-9]+\.[0-9]+/) print $i}')"
+        release_file="greenforce-GCC-${gcc_version}-armgnu-${build_tag}.tar.zst"
+        tar -I 'zstd --ultra -5 -T0' -cf "${release_file}" ./*
+        if gh release view "${build_tag}"; then
+            gh release upload --clobber "${build_tag}" "${release_file}" &&
+                {
+                    echo "Version ${build_tag} updated!"
+                }
+        else
+            gh release create "${build_tag}" "${release_file}" -t "${build_date}" &&
+                {
+                    echo "Version ${build_tag} released!"
+                }
+        fi

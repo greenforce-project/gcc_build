@@ -21,18 +21,20 @@ done
 # TODO: Better target handling
 case "${arch}" in
   "arm") TARGET="arm-eabi" ;;
+  "armgnu") TARGET="arm-linux-gnueabi" ;;
   "arm64") TARGET="aarch64-elf" ;;
   "arm64gnu") TARGET="aarch64-linux-gnu" ;;
   "x86") TARGET="x86_64-elf" ;;
+  "x86gnu") TARGET="x86_64-pc-linux-gnu" ;;
 esac
 
 export WORK_DIR="$PWD"
 export PREFIX="$WORK_DIR/gcc-${arch}"
 export PATH="$PREFIX/bin:/usr/bin/core_perl:$PATH"
-export OPT_FLAGS="-flto -flto-compression-level=10 -O3 -pipe -ffunction-sections -fdata-sections"
+export OPT_FLAGS="-O2 -pipe -ffunction-sections -fdata-sections -fstack-protector-strong"
 
 echo "Cleaning up previously cloned repos..."
-rm -rf "$WORK_DIR"/{binutils,build-binutils,build-gcc,gcc}
+rm -rf "$WORK_DIR"/{binutils,build-binutils,build-gcc,gcc} "$PREFIX"/*
 
 echo "||                                                                    ||"
 echo "|| Building Bare Metal Toolchain for ${arch} with ${TARGET} as target ||"
@@ -41,47 +43,54 @@ echo "||                                                                    ||"
 download_resources() {
   echo "Downloading Pre-requisites"
   echo "Cloning binutils"
-  git clone git://sourceware.org/git/binutils-gdb.git -b master binutils --depth=1
-  sed -i '/^development=/s/true/false/' binutils/bfd/development.sh
+  git clone git://sourceware.org/git/binutils-gdb.git -b master "$WORK_DIR"/binutils --depth=1
   echo "Cloned binutils!"
   echo "Cloning GCC"
-  git clone git://gcc.gnu.org/git/gcc.git -b master gcc --depth=1
-  cd "${WORK_DIR}"
+  git clone git://gcc.gnu.org/git/gcc.git -b master "$WORK_DIR"/gcc --depth=1
   echo "Downloaded prerequisites!"
 }
 
 build_binutils() {
-  cd "${WORK_DIR}"
   echo "Building Binutils"
-  mkdir build-binutils
-  cd build-binutils
+  mkdir -p "$WORK_DIR"/build-binutils
+  pushd "$WORK_DIR"/build-binutils || exit 1
   env CFLAGS="$OPT_FLAGS" CXXFLAGS="$OPT_FLAGS" \
-    ../binutils/configure --target="$TARGET" \
+  "$WORK_DIR"/binutils/configure --target="$TARGET" \
     --disable-docs \
     --disable-gdb \
     --disable-nls \
     --disable-werror \
-    --enable-gold \
+    --disable-readline \
+    --disable-libdecnumber \
+    --disable-shared \
+    --enable-static \
+    --disable-gold \
+    --disable-plugins \
+    --disable-sim \
+    --enable-deterministic-archives \
     --prefix="$PREFIX" \
-    --with-pkgversion="Eva Binutils" \
+    --with-pkgversion="Gf Cross Binutils" \
     --with-sysroot
   make -j"$JOBS"
   make install -j"$JOBS"
-  cd ../
+  popd || exit 1
   echo "Built Binutils, proceeding to next step...."
 }
 
 build_gcc() {
-  cd "${WORK_DIR}"
   echo "Building GCC"
-  cd gcc
+  pushd "$WORK_DIR"/gcc || exit 1
   ./contrib/download_prerequisites
-  echo "Bleeding Edge" > gcc/DEV-PHASE
-  cd ../
-  mkdir build-gcc
-  cd build-gcc
+  trim_ver="$(cat gcc/BASE-VER | cut -c 1-2)"
+  echo "Gf Cross v${trim_ver}" > gcc/DEV-PHASE
+  cat gcc/DATESTAMP > /tmp/gcc_date
+  echo "$(git rev-parse --short HEAD)" > /tmp/gcc_hash
+  echo "$(git log --pretty='format:%s' | head -n1)" > /tmp/gcc_commit
+  popd || exit 1
+  mkdir -p "$WORK_DIR"/build-gcc
+  pushd "$WORK_DIR"/build-gcc || exit 1
   env CFLAGS="$OPT_FLAGS" CXXFLAGS="$OPT_FLAGS" \
-    ../gcc/configure --target="$TARGET" \
+  "$WORK_DIR"/gcc/configure --target="$TARGET" \
     --disable-decimal-float \
     --disable-docs \
     --disable-gcov \
@@ -93,21 +102,21 @@ build_gcc() {
     --disable-nls \
     --disable-shared \
     --enable-default-ssp \
-    --enable-languages=c,c++,fortran \
+    --enable-languages=c \
     --enable-threads=posix \
     --prefix="$PREFIX" \
     --with-gnu-as \
     --with-gnu-ld \
-    --with-headers="/usr/include" \
+    --with-headers="" \
     --with-linker-hash-style=gnu \
     --with-newlib \
-    --with-pkgversion="Eva GCC" \
-    --with-sysroot
-
+    --without-sysroot
   make all-gcc -j"$JOBS"
   make all-target-libgcc -j"$JOBS"
   make install-gcc -j"$JOBS"
   make install-target-libgcc -j"$JOBS"
+  rm -rf "$PREFIX/share" "$PREFIX/include" "$PREFIX/etc" "$PREFIX"/lib/gcc/*/*/install-tools
+  popd || exit 1
   echo "Built GCC!"
 }
 

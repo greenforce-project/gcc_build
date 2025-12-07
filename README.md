@@ -1,6 +1,6 @@
 # GCC Cross Compiler Toolchain Build Script
 
-[![GCC+LLD Build](https://github.com/mvaisakh/gcc-build/actions/workflows/toolchain-build.yml/badge.svg)](https://github.com/mvaisakh/gcc-build/actions/workflows/toolchain-build.yml)
+[![GCC Build](https://github.com/greenforce-project/gcc_build/actions/workflows/toolchain-build.yml/badge.svg)](https://github.com/greenforce-project/gcc_build/actions/workflows/toolchain-build.yml)
 
 This repository contains the script needed to compile bare metal GCC for various architectures using Linux distributions. The GCC source is fetched from the master branch hence, contains all the bleeding edge changes.
 
@@ -54,7 +54,10 @@ git clone https://github.com/mvaisakh/gcc-build.git gcc-build
 
 ## Looking for precompiled toolchains?
 
-My GCC Cross Compiler builds are automated and pushed biweekly i.e. on Sundays & Thursdays at 00:00 GMT+5:30 (IST). [They are pushed to the releases page](https://github.com/mvaisakh/gcc-build/releases/latest)!
+My GCC Cross Compiler builds are automated and pushed biweekly i.e. on Saturday at 07:40 UTC+07 (WIB). They are pushed to:
+* **[ARM64](https://github.com/greenforce-project/gcc-arm64.git)**
+* **[ARM32](https://github.com/greenforce-project/gcc-arm.git)**
+* **[X86_64]()** (Not built on cron anymore)
 
 ## Contributing to this repo
 
