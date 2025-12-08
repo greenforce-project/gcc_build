@@ -38,7 +38,7 @@ jobs:
       image: mhmmdfdlyas/dockerfile:t-ubuntu
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - name: Setup git config and hooks
       run: |
         git config --global user.name "$GITHUB_USER"
