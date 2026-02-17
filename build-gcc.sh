@@ -44,6 +44,7 @@ download_resources() {
   echo "Downloading Pre-requisites"
   echo "Cloning binutils"
   git clone git://sourceware.org/git/binutils-gdb.git -b master "$WORK_DIR"/binutils --depth=1
+  sed -i '/^development=/s/true/false/' "$WORK_DIR"/binutils/bfd/development.sh
   echo "Cloned binutils!"
   echo "Cloning GCC"
   git clone git://gcc.gnu.org/git/gcc.git -b master "$WORK_DIR"/gcc --depth=1
