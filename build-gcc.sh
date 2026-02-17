@@ -54,6 +54,9 @@ download_resources() {
 build_binutils() {
   echo "Building Binutils"
   mkdir -p "$WORK_DIR"/build-binutils
+  pushd "$WORK_DIR"/gcc || exit 1
+  export trim_ver="$(cat gcc/BASE-VER | cut -c 1-2)"
+  popd || exit 1
   pushd "$WORK_DIR"/build-binutils || exit 1
   env CFLAGS="$OPT_FLAGS" CXXFLAGS="$OPT_FLAGS" \
   "$WORK_DIR"/binutils/configure --target="$TARGET" \
@@ -63,7 +66,7 @@ build_binutils() {
     --disable-werror \
     --enable-gold \
     --prefix="$PREFIX" \
-    --with-pkgversion="Gf Cross Binutils" \
+    --with-pkgversion="Gf Binutils v${trim_ver}" \
     --with-sysroot
   make -j"$JOBS"
   make install -j"$JOBS"
@@ -75,8 +78,7 @@ build_gcc() {
   echo "Building GCC"
   pushd "$WORK_DIR"/gcc || exit 1
   ./contrib/download_prerequisites
-  trim_ver="$(cat gcc/BASE-VER | cut -c 1-2)"
-  echo "Gf Cross v${trim_ver}" > gcc/DEV-PHASE
+  echo "Gf's C/C++ Compiler, GNU-compatible" > gcc/DEV-PHASE
   cat gcc/DATESTAMP > /tmp/gcc_date
   echo "$(git rev-parse --short HEAD)" > /tmp/gcc_hash
   echo "$(git log --pretty='format:%s' | head -n1)" > /tmp/gcc_commit
