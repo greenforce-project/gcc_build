@@ -1,10 +1,7 @@
 name: GCC Build
 
 on:
-  workflow_dispatch:
     branches: [ main ]
-  schedule:
-    - cron: '0 00 * * SAT'
 
 env:
       TZ: Asia/Jakarta
