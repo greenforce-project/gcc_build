@@ -60,14 +60,7 @@ build_binutils() {
     --disable-gdb \
     --disable-nls \
     --disable-werror \
-    --disable-readline \
-    --disable-libdecnumber \
-    --disable-shared \
-    --enable-static \
-    --disable-gold \
-    --disable-plugins \
-    --disable-sim \
-    --enable-deterministic-archives \
+    --enable-gold \
     --prefix="$PREFIX" \
     --with-pkgversion="Gf Cross Binutils" \
     --with-sysroot
@@ -102,15 +95,15 @@ build_gcc() {
     --disable-nls \
     --disable-shared \
     --enable-default-ssp \
-    --enable-languages=c \
+    --enable-languages=c,c++ \
     --enable-threads=posix \
     --prefix="$PREFIX" \
     --with-gnu-as \
     --with-gnu-ld \
-    --with-headers="" \
+    --with-headers="/usr/include" \
     --with-linker-hash-style=gnu \
     --with-newlib \
-    --without-sysroot
+    --with-sysroot
   make all-gcc -j"$JOBS"
   make all-target-libgcc -j"$JOBS"
   make install-gcc -j"$JOBS"
