@@ -109,7 +109,6 @@ build_gcc() {
   make all-target-libgcc -j"$JOBS"
   make install-gcc -j"$JOBS"
   make install-target-libgcc -j"$JOBS"
-  rm -rf "$PREFIX/share" "$PREFIX/include" "$PREFIX/etc" "$PREFIX"/lib/gcc/*/*/install-tools
   popd || exit 1
   echo "Built GCC!"
 }
