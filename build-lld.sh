@@ -12,8 +12,11 @@ while getopts a: flag; do
     arch="$OPTARG"
     case "${OPTARG}" in
       "arm") ARCH_CLANG="ARM" && TARGET_CLANG="arm-linux-gnueabi" && TARGET_GCC="arm-eabi" ;;
+      "armgnu") ARCH_CLANG="ARM" && TARGET_CLANG="arm-linux-gnueabi" && TARGET_GCC="arm-linux-gnueabi" ;;
       "arm64") ARCH_CLANG="AArch64" && TARGET_CLANG="aarch64-linux-gnu" && TARGET_GCC="aarch64-elf" ;;
+      "arm64gnu") ARCH_CLANG="AArch64" && TARGET_CLANG="aarch64-linux-gnu" && TARGET_GCC="aarch64-linux-gnu" ;;
       "x86") ARCH_CLANG="X86" && TARGET_CLANG="x86_64-linux-gnu" && TARGET_GCC="x86_64-elf" ;;
+      "x86gnu") ARCH_CLANG="X86" && TARGET_CLANG="x86_64-linux-gnu" && TARGET_GCC="x86_64-linux-gnu" ;;
       *) echo "Invalid architecture passed: $OPTARG" && exit 1 ;;
     esac
   else
