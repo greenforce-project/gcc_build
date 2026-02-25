@@ -11,6 +11,7 @@ container:
 
 build_arm64_tc_task:
   name: "Build ARM64 Toolchain"
+  skip: "!changesInclude('build-datestamp')"
   timeout_in: 120m
   only_if: $CIRRUS_BRANCH == 'main'
   script:
@@ -52,6 +53,7 @@ build_arm64_tc_task:
 
 build_arm_tc_task:
   name: "Build ARM Toolchain"
+  skip: "!changesInclude('build-datestamp')"
   timeout_in: 120m
   only_if: $CIRRUS_BRANCH == 'main'
   script:
