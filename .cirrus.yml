@@ -9,8 +9,7 @@ container:
   cpu: 8
   memory: 32G
 
-build_arm64_tc_task:
-  name: "Build ARM64 Toolchain"
+_build_toolchain_task: &build_toolchain_task
   skip: "!changesInclude('build-datestamp')"
   timeout_in: 120m
   only_if: $CIRRUS_BRANCH == 'main'
@@ -20,16 +19,15 @@ build_arm64_tc_task:
       git config --global user.email "$GITHUB_EMAIL"
       mkdir -p ~/.git/hooks
       git config --global core.hooksPath ~/.git/hooks
-      curl -Lo ~/.git/hooks/commit-msg https://review.lineageos.org/tools/hooks/commit-msg
+      curl -fsSL -o ~/.git/hooks/commit-msg https://review.lineageos.org/tools/hooks/commit-msg
       chmod u+x ~/.git/hooks/commit-msg
-      git clone "https://${GITHUB_TOKEN}@github.com/greenforce-project/gcc-arm64" -b main gcc-arm64gnu --depth=1
-      chmod a+x build-*.sh
-      bash build-gcc.sh -a arm64gnu
+      git clone "https://${GITHUB_TOKEN}@github.com/greenforce-project/${REPO}" -b main "${WORKDIR}" --depth=1
+      bash build-gcc.sh -a "${ARCH}"
       script_dir="$(pwd)"
-      cd gcc-arm64gnu
-      ./bin/aarch64-linux-gnu-gcc -v 2>&1 | tee ../gcc-version
-      ./bin/aarch64-linux-gnu-ld -v 2>&1 | tee ../ld-version
-      bash "$script_dir/strip-binaries.sh"
+      cd "${WORKDIR}"
+      "./bin/${TRIPLE}-gcc" -v 2>&1 | tee ../gcc-version
+      "./bin/${TRIPLE}-ld"  -v 2>&1 | tee ../ld-version
+      bash "${script_dir}/strip-binaries.sh"
       build_tag="$(cat /tmp/gcc_date)"
       build_date="$(date +'%-d %B %Y')"
       git add . -f
@@ -43,7 +41,7 @@ build_arm64_tc_task:
       git commit -m "greenforce: Bump to ${build_tag} build" -m "$(cat ../git_commit)" -s
       git push -f
       gcc_version="$(grep 'gcc version' ../gcc-version | awk '{for(i=1;i<=NF;i++) if ($i ~ /[0-9]+\.[0-9]+\.[0-9]+/) print $i}')"
-      release_file="greenforce-GCC-${gcc_version}-arm64gnu-${build_tag}.tar.zst"
+      release_file="greenforce-GCC-${gcc_version}-${ARCH}-${build_tag}.tar.zst"
       tar -I 'zstd --ultra -5 -T0' -cf "${release_file}" ./*
       if gh release view "${build_tag}"; then
         gh release upload --clobber "${build_tag}" "${release_file}"
@@ -51,44 +49,20 @@ build_arm64_tc_task:
         gh release create "${build_tag}" "${release_file}" -t "${build_date}"
       fi
 
+build_arm64_tc_task:
+  <<: *build_toolchain_task
+  name: "Build ARM64 Toolchain"
+  env:
+    REPO: "gcc-arm64"
+    WORKDIR: "gcc-arm64gnu"
+    ARCH: "arm64gnu"
+    TRIPLE: "aarch64-linux-gnu"
+
 build_arm_tc_task:
+  <<: *build_toolchain_task
   name: "Build ARM Toolchain"
-  skip: "!changesInclude('build-datestamp')"
-  timeout_in: 120m
-  only_if: $CIRRUS_BRANCH == 'main'
-  script:
-    - |
-      git config --global user.name "$GITHUB_USER"
-      git config --global user.email "$GITHUB_EMAIL"
-      mkdir -p ~/.git/hooks
-      git config --global core.hooksPath ~/.git/hooks
-      curl -Lo ~/.git/hooks/commit-msg https://review.lineageos.org/tools/hooks/commit-msg
-      chmod u+x ~/.git/hooks/commit-msg
-      git clone "https://${GITHUB_TOKEN}@github.com/greenforce-project/gcc-arm" -b main gcc-armgnu --depth=1
-      chmod a+x build-*.sh
-      bash build-gcc.sh -a armgnu
-      script_dir="$(pwd)"
-      cd gcc-armgnu
-      ./bin/arm-linux-gnueabi-gcc -v 2>&1 | tee ../gcc-version
-      ./bin/arm-linux-gnueabi-ld -v 2>&1 | tee ../ld-version
-      bash "$script_dir/strip-binaries.sh"
-      build_tag="$(cat /tmp/gcc_date)"
-      build_date="$(date +'%-d %B %Y')"
-      git add . -f
-      touch ../git_commit
-      {
-        echo "GCC version: $(grep 'gcc version' ../gcc-version)"
-        echo "Binutils version: $(head -n1 ../ld-version)"
-        echo "GCC repo commit: $(cat /tmp/gcc_commit)"
-        echo "Link: https://github.com/gcc-mirror/gcc/commit/$(cat /tmp/gcc_hash)"
-      } > ../git_commit
-      git commit -m "greenforce: Bump to ${build_tag} build" -m "$(cat ../git_commit)" -s
-      git push -f
-      gcc_version="$(grep 'gcc version' ../gcc-version | awk '{for(i=1;i<=NF;i++) if ($i ~ /[0-9]+\.[0-9]+\.[0-9]+/) print $i}')"
-      release_file="greenforce-GCC-${gcc_version}-armgnu-${build_tag}.tar.zst"
-      tar -I 'zstd --ultra -5 -T0' -cf "${release_file}" ./*
-      if gh release view "${build_tag}"; then
-        gh release upload --clobber "${build_tag}" "${release_file}"
-      else
-        gh release create "${build_tag}" "${release_file}" -t "${build_date}"
-      fi
+  env:
+    REPO: "gcc-arm"
+    WORKDIR: "gcc-armgnu"
+    ARCH: "armgnu"
+    TRIPLE: "arm-linux-gnueabi"
