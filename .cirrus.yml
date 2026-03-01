@@ -15,6 +15,9 @@ _build_toolchain_task: &build_toolchain_task
   only_if: $CIRRUS_BRANCH == 'main'
   script:
     - |
+      for var in REPO WORKDIR ARCH TRIPLE; do
+          [[ -z "${!var}" ]] && exit 0
+      done
       git config --global user.name "$GITHUB_USER"
       git config --global user.email "$GITHUB_EMAIL"
       mkdir -p ~/.git/hooks
