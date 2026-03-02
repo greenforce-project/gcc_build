@@ -31,7 +31,7 @@ esac
 export WORK_DIR="$PWD"
 export PREFIX="$WORK_DIR/gcc-${arch}"
 export PATH="$PREFIX/bin:/usr/bin/core_perl:$PATH"
-export OPT_FLAGS="-flto -flto-compression-level=10 -O3 -pipe -ffunction-sections -fdata-sections"
+export OPT_FLAGS="-O2 -pipe -ffunction-sections -fdata-sections -fstack-protector-strong"
 
 echo "Cleaning up previously cloned repos..."
 rm -rf "$WORK_DIR"/{binutils,build-binutils,build-gcc,gcc} "$PREFIX"/*
