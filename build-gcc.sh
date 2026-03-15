@@ -64,7 +64,6 @@ build_binutils() {
     --disable-gdb \
     --disable-nls \
     --disable-werror \
-    --enable-gold \
     --prefix="$PREFIX" \
     --with-pkgversion="Gf Binutils v${trim_ver}" \
     --with-sysroot
@@ -94,18 +93,17 @@ build_gcc() {
     --disable-libgomp \
     --disable-libmudflap \
     --disable-libquadmath \
+    --disable-libssp \
     --disable-libstdcxx-pch \
     --disable-nls \
     --disable-shared \
-    --enable-default-ssp \
-    --enable-languages=c,c++ \
-    --enable-threads=posix \
+    --disable-threads \
+    --enable-languages=c \
     --prefix="$PREFIX" \
     --with-gnu-as \
     --with-gnu-ld \
-    --with-headers="/usr/include" \
-    --with-linker-hash-style=gnu \
     --with-newlib \
+    --without-headers \
     --with-sysroot
   make all-gcc -j"$JOBS"
   make all-target-libgcc -j"$JOBS"
