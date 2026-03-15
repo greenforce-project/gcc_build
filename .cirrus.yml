@@ -57,7 +57,7 @@ build_arm64_tc_task:
   name: "Build ARM64 Toolchain"
   env:
     REPO: "gcc-arm64"
-    WORKDIR: "gcc-arm64gnu"
+    WORKDIR: "gcc-arm64"
     ARCH: "arm64"
     TRIPLE: "aarch64-elf"
 
@@ -66,6 +66,6 @@ build_arm_tc_task:
   name: "Build ARM Toolchain"
   env:
     REPO: "gcc-arm"
-    WORKDIR: "gcc-armgnu"
+    WORKDIR: "gcc-arm"
     ARCH: "arm"
     TRIPLE: "arm-none-eabi"
