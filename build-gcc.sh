@@ -20,7 +20,7 @@ done
 
 # TODO: Better target handling
 case "${arch}" in
-  "arm") TARGET="arm-eabi" ;;
+  "arm") TARGET="arm-none-eabi" ;;
   "armgnu") TARGET="arm-linux-gnueabi" ;;
   "arm64") TARGET="aarch64-elf" ;;
   "arm64gnu") TARGET="aarch64-linux-gnu" ;;
