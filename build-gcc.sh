@@ -61,9 +61,6 @@ download_resources() {
 build_binutils() {
   echo "Building Binutils"
   mkdir -p "$WORK_DIR"/build-binutils
-  pushd "$WORK_DIR"/gcc || exit 1
-  export trim_ver="$(cat gcc/BASE-VER | cut -c 1-2)"
-  popd || exit 1
   pushd "$WORK_DIR"/build-binutils || exit 1
   env CFLAGS="$OPT_FLAGS" CXXFLAGS="$OPT_FLAGS" \
   "$WORK_DIR"/binutils/configure --target="$TARGET" \
@@ -73,7 +70,6 @@ build_binutils() {
     --disable-werror \
     --disable-multilib \
     --prefix="$PREFIX" \
-    --with-pkgversion="Gf Binutils v${trim_ver}" \
     --with-sysroot="$SYSROOT"
   make -j"$JOBS"
   make install -j"$JOBS"
@@ -85,7 +81,6 @@ build_gcc_stage1() {
   echo "Building GCC Stage 1"
   pushd "$WORK_DIR"/gcc || exit 1
   ./contrib/download_prerequisites
-  echo "Gf's C Compiler, GNU-compatible" > gcc/DEV-PHASE
   cat gcc/DATESTAMP > /tmp/gcc_date
   echo "$(git rev-parse --short HEAD)" > /tmp/gcc_hash
   echo "$(git log --pretty='format:%s' | head -n1)" > /tmp/gcc_commit
@@ -112,6 +107,7 @@ build_gcc_stage1() {
     --with-gnu-as \
     --with-gnu-ld \
     --with-newlib \
+    --with-pkgversion="Gf GCC" \
     --without-headers \
     --with-sysroot="$SYSROOT"
   make all-gcc -j"$JOBS"
