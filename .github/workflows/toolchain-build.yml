@@ -17,7 +17,7 @@ jobs:
       image: mhmmdfdlyas/dockerfile:t-ubuntu
 
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
       with:
         fetch-depth: 0
     - name: Push an empty commit
@@ -35,7 +35,7 @@ jobs:
       image: mhmmdfdlyas/dockerfile:t-ubuntu
 
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
     - name: Setup git config and hooks
       run: |
         git config --global user.name "$GITHUB_USER"
@@ -89,7 +89,7 @@ jobs:
       image: mhmmdfdlyas/dockerfile:t-ubuntu
 
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
     - name: Setup git config and hooks
       run: |
         git config --global user.name "$GITHUB_USER"
